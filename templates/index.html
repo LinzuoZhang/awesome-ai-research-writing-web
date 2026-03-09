@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Academic Writing Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Academic Writing Assistant</h1>
+            <p class="subtitle">Make AI Writing Better for Everyone</p>
+        </header>
+
+        <main>
+            <!-- Settings Panel -->
+            <section class="settings-panel">
+                <div class="setting-item">
+                    <label for="api-url">API Base URL</label>
+                    <input type="text" id="api-url" placeholder="https://api.anthropic.com 或 https://api.openai.com/v1">
+                    <span class="hint">支持 Anthropic、OpenAI 及兼容格式的地址</span>
+                </div>
+                <div class="setting-item">
+                    <label for="api-key">API Key</label>
+                    <input type="password" id="api-key" placeholder="sk-..." autocomplete="off">
+                    <span class="hint">API Key 仅保存在本地浏览器</span>
+                </div>
+                <div class="setting-item">
+                    <label for="model">模型 (可选)</label>
+                    <input type="text" id="model" placeholder="留空使用默认模型">
+                    <span class="hint">如：claude-sonnet-4-20250514, gpt-4.1, deepseek-chat</span>
+                </div>
+            </section>
+
+            <!-- Function Selection -->
+            <section class="function-section">
+                <h2>选择功能</h2>
+                <div class="function-tabs">
+                    <button class="tab-btn active" data-category="all">全部</button>
+                    <button class="tab-btn" data-category="translation">翻译</button>
+                    <button class="tab-btn" data-category="adjustment">调整</button>
+                    <button class="tab-btn" data-category="polishing">润色</button>
+                    <button class="tab-btn" data-category="review">审查</button>
+                </div>
+                <div class="function-grid" id="function-grid">
+                    <!-- Functions will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Input/Output Section -->
+            <section class="io-section hidden">
+                <div id="input-panel-container">
+                    <!-- Input panel will be rendered by JavaScript -->
+                </div>
+
+                <div class="output-panel">
+                    <div class="panel-header">
+                        <h2>输出</h2>
+                        <div class="output-actions">
+                            <button id="copy-btn" class="btn btn-secondary" disabled>复制</button>
+                            <button id="clear-output-btn" class="btn btn-secondary">清空</button>
+                        </div>
+                    </div>
+                    <div id="output-container" class="output-container">
+                        <div class="output-tabs">
+                            <button class="output-tab active" data-part="main">主要结果</button>
+                            <button class="output-tab" data-part="translation">中文翻译</button>
+                            <button class="output-tab" data-part="log">修改说明</button>
+                        </div>
+                        <div id="output-content" class="output-content">
+                            <p class="placeholder">处理结果将显示在这里</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Powered by <a href="https://claude.ai" target="_blank">Claude</a> & <a href="https://openai.com" target="_blank">OpenAI</a></p>
+            <p>基于 <a href="https://github.com/Leey21/awesome-ai-research-writing" target="_blank">awesome-ai-research-writing</a> Prompt 模板</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Embed templates data from server
+        window.templates = {{ templates | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
+</body>
+</html>

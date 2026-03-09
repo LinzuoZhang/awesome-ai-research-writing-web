@@ -1,0 +1,93 @@
+{
+  "prompts": [
+    {
+      "id": "zh-to-en",
+      "name": "中译英",
+      "name_en": "Chinese to English",
+      "description": "将中文草稿翻译并润色为英文学术论文片段",
+      "template_file": "templates/zh-to-en.md",
+      "input_placeholder": "在此处粘贴你的中文草稿",
+      "output_format": "latex",
+      "input_type": "text",
+      "category": "translation"
+    },
+    {
+      "id": "en-to-zh",
+      "name": "英译中",
+      "name_en": "English to Chinese",
+      "description": "将英文 LaTeX 代码片段翻译为流畅的中文文本",
+      "template_file": "templates/en-to-zh.md",
+      "input_placeholder": "在此处粘贴你的英文 LaTeX 代码",
+      "output_format": "text",
+      "input_type": "text",
+      "category": "translation"
+    },
+    {
+      "id": "abbreviate",
+      "name": "缩写",
+      "name_en": "Abbreviate",
+      "description": "在不损失信息量的前提下，少量缩减文本长度（5-15 词）",
+      "template_file": "templates/abbreviate.md",
+      "input_placeholder": "在此处粘贴你的英文 LaTeX 代码",
+      "output_format": "latex",
+      "input_type": "text",
+      "category": "adjustment"
+    },
+    {
+      "id": "expand",
+      "name": "扩写",
+      "name_en": "Expand",
+      "description": "通过深挖内容深度和增强逻辑连接，微幅扩写文本（5-15 词）",
+      "template_file": "templates/expand.md",
+      "input_placeholder": "在此处粘贴你的英文 LaTeX 代码",
+      "output_format": "latex",
+      "input_type": "text",
+      "category": "adjustment"
+    },
+    {
+      "id": "english-polish",
+      "name": "表达润色（英文论文）",
+      "name_en": "English Polishing",
+      "description": "深度润色英文论文，提升学术严谨性、清晰度与可读性",
+      "template_file": "templates/english-polish.md",
+      "input_placeholder": "在此处粘贴你的英文 LaTeX 代码",
+      "output_format": "latex",
+      "input_type": "text",
+      "category": "polishing"
+    },
+    {
+      "id": "chinese-polish",
+      "name": "表达润色（中文论文）",
+      "name_en": "Chinese Polishing",
+      "description": "审慎润色中文论文，仅在必要时修改，保持原文风格",
+      "template_file": "templates/chinese-polish.md",
+      "input_placeholder": "在此处粘贴你的中文论文段落",
+      "output_format": "text",
+      "input_type": "text",
+      "category": "polishing"
+    },
+    {
+      "id": "remove-ai-tone",
+      "name": "去 AI 味",
+      "name_en": "Remove AI Tone",
+      "description": "将 AI 生成的机械化文本重写为自然的学术表达",
+      "template_file": "templates/remove-ai-tone.md",
+      "input_placeholder": "在此处粘贴你的英文 LaTeX 代码",
+      "output_format": "latex",
+      "input_type": "text",
+      "category": "polishing"
+    },
+    {
+      "id": "logic-check",
+      "name": "逻辑检查",
+      "name_en": "Logic Check",
+      "description": "对论文进行红线审查，检查逻辑断层、术语一致性和严重语病",
+      "template_file": "templates/logic_check.md",
+      "input_placeholder": "在此处粘贴 LaTeX 代码或上传 ZIP 文件",
+      "output_format": "text",
+      "input_type": "mixed",
+      "accepted_formats": [".zip"],
+      "category": "review"
+    }
+  ]
+}
