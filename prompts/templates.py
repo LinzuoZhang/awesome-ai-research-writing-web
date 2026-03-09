@@ -22,6 +22,7 @@ class PromptTemplate:
     category: Literal['translation', 'adjustment', 'polishing', 'review', 'other']
     input_type: str = 'text'
     accepted_formats: list = None
+    output_tags: list = None
 
 
 def _load_templates() -> list[PromptTemplate]:
@@ -50,7 +51,8 @@ def _load_templates() -> list[PromptTemplate]:
             output_format=prompt_data['output_format'],
             category=prompt_data['category'],
             input_type=prompt_data.get('input_type', 'text'),
-            accepted_formats=prompt_data.get('accepted_formats', [])
+            accepted_formats=prompt_data.get('accepted_formats', []),
+            output_tags=prompt_data.get('output_tags', [])
         )
         templates.append(template)
 

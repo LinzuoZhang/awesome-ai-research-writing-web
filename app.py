@@ -33,7 +33,8 @@ def get_templates():
             'output_format': t.output_format,
             'input_type': t.input_type,
             'accepted_formats': t.accepted_formats,
-            'category': t.category
+            'category': t.category,
+            'output_tags': t.output_tags
         }
         for t in TEMPLATES
     ]

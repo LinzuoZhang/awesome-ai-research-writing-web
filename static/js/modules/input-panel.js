@@ -25,7 +25,8 @@ export class InputPanel {
             inputType: 'text',
             text: '',
             files: [],
-            placeholder: ''
+            placeholder: '',
+            isProcessing: false
         };
 
         this.elements = {};
@@ -143,6 +144,18 @@ export class InputPanel {
      * Handle input mode change (text vs file)
      */
     handleInputModeChange() {
+        // Prevent switching while processing
+        if (this.state.isProcessing) {
+            showToast('正在处理中，请稍后再试', 'error');
+            // Reset radio to current active mode
+            const textRadio = this.container.querySelector('input[name="input-mode"][value="text"]');
+            const isTextMode = !this.elements.fileColumn.classList.contains('disabled');
+            if (textRadio) {
+                textRadio.checked = isTextMode;
+            }
+            return;
+        }
+
         const textRadio = this.container.querySelector('input[name="input-mode"][value="text"]');
         const fileRadio = this.container.querySelector('input[name="input-mode"][value="file"]');
 
@@ -153,10 +166,15 @@ export class InputPanel {
                 this.elements.fileColumn.classList.add('disabled');
                 this.state.files = [];
                 this.updateFileList();
+                // Clear file input
+                if (this.elements.fileInput) {
+                    this.elements.fileInput.value = '';
+                }
             } else {
                 // File mode enabled, disable text column
                 this.elements.textColumn.classList.add('disabled');
                 this.elements.fileColumn.classList.remove('disabled');
+                // Clear text input
                 if (this.elements.textarea) {
                     this.elements.textarea.value = '';
                 }
@@ -439,8 +457,27 @@ export class InputPanel {
     setEnabled(enabled) {
         const processBtn = this.getProcessButton();
         if (processBtn) {
-            processBtn.disabled = !enabled;
+            processBtn.disabled = !enabled || this.state.isProcessing;
         }
+    }
+
+    /**
+     * Set processing state
+     * @param {boolean} processing
+     */
+    setProcessing(processing) {
+        this.state.isProcessing = processing;
+        // Re-evaluate button state
+        const hasContent = this.getContent().text.trim() || this.getContent().files.length > 0;
+        this.setEnabled(hasContent);
+    }
+
+    /**
+     * Check if currently processing
+     * @returns {boolean}
+     */
+    isProcessing() {
+        return this.state.isProcessing;
     }
 }
 

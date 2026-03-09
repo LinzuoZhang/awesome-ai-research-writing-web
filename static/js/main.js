@@ -100,12 +100,18 @@ function renderFunctions() {
 
 // Select a template
 function selectTemplate(template) {
+    // Prevent switching while processing
+    if (inputPanel && inputPanel.isProcessing()) {
+        showToast('正在处理中，请稍后再试', 'error');
+        return;
+    }
+
     selectedTemplate = template;
 
     // Show IO section when a template is selected
     elements.ioSection.classList.remove('hidden');
 
-    // Render input panel based on template type
+    // Render input panel based on template type (this will clear previous input)
     const inputType = template.input_type || 'text';
     inputPanel.render(inputType, {
         placeholder: template.input_placeholder,
@@ -260,31 +266,95 @@ async function processWithFiles(content) {
     parseAndDisplayResult(data.result);
 }
 
-// Parse result into parts (main, translation, log)
+// Parse result into parts based on output_tags
 function parseAndDisplayResult(result) {
-    // Try to parse Part 1, Part 2, Part 3 from result
-    const part1Match = result.match(/Part\s*1\s*\[([^\]]+)\]\s*(:|\n)?([\s\S]*?)(?=Part\s*2|$)/i);
-    const part2Match = result.match(/Part\s*2\s*\[([^\]]+)\]\s*(:|\n)?([\s\S]*?)(?=Part\s*3|$)/i);
-    const part3Match = result.match(/Part\s*3\s*\[([^\]]+)\]\s*(:|\n)?([\s\S]*?)(?=Part\s*4|$)/i);
+    const outputTags = selectedTemplate?.output_tags || [];
 
-    processedResult = {
-        main: part1Match ? part1Match[3].trim() : result,
-        translation: part2Match ? part2Match[3].trim() : '',
-        log: part3Match ? part3Match[3].trim() : ''
-    };
+    // Initialize processedResult with empty values
+    processedResult = {};
 
-    // Show main part by default
-    elements.outputTabs.forEach(t => t.classList.remove('active'));
-    elements.outputTabs[0].classList.add('active');
-    showOutputPart('main');
+    if (outputTags.length === 0) {
+        // No output tags - show entire result as main content
+        processedResult.main = result;
+    } else {
+        // Parse result based on output_tags
+        outputTags.forEach((tag, index) => {
+            const nextTag = outputTags[index + 1];
+            const pattern = new RegExp(
+                escapeRegExp(tag) + '\\s*\\[([^\\]]+)\\]\\s*(:|\\n)?([\\s\\S]*?)(?=' +
+                (nextTag ? escapeRegExp(nextTag) : '$') + ')',
+                'i'
+            );
+            const match = result.match(pattern);
+            const key = `part${index + 1}`;
+            processedResult[key] = match ? match[3].trim() : '';
+        });
+    }
+
+    // Render output tabs dynamically
+    renderOutputTabs(outputTags);
+
+    // Show first part by default
+    const firstPart = outputTags.length > 0 ? 'part1' : 'main';
+    showOutputPart(firstPart);
 
     // Enable copy button
     elements.copyBtn.disabled = false;
 }
 
+// Escape special regex characters
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Render output tabs dynamically based on output_tags
+function renderOutputTabs(outputTags) {
+    const tabsContainer = document.querySelector('.output-tabs');
+    if (!tabsContainer) return;
+
+    // Clear existing tabs
+    tabsContainer.innerHTML = '';
+
+    if (outputTags.length === 0) {
+        // Single tab for non-partitioned output
+        const tab = document.createElement('button');
+        tab.className = 'output-tab active';
+        tab.dataset.part = 'main';
+        tab.textContent = '输出结果';
+        tabsContainer.appendChild(tab);
+    } else {
+        // Create tabs based on output_tags
+        const tabLabels = {
+            'Part 1': '主要结果',
+            'Part 2': '中文翻译',
+            'Part 3': '修改说明'
+        };
+
+        outputTags.forEach((tag, index) => {
+            const tab = document.createElement('button');
+            tab.className = `output-tab${index === 0 ? ' active' : ''}`;
+            tab.dataset.part = `part${index + 1}`;
+            tab.textContent = tabLabels[tag] || tag;
+            tabsContainer.appendChild(tab);
+        });
+    }
+
+    // Re-attach event listeners to new tabs
+    tabsContainer.querySelectorAll('.output-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            elements.outputTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            showOutputPart(tab.dataset.part);
+        });
+    });
+
+    // Update the outputTabs reference
+    elements.outputTabs = tabsContainer.querySelectorAll('.output-tab');
+}
+
 // Show specific part of output
 function showOutputPart(part) {
-    const content = processedResult[part] || processedResult.main;
+    const content = processedResult[part];
     if (content) {
         elements.outputContent.textContent = content;
     } else {
@@ -308,15 +378,38 @@ async function copyOutput() {
 
 // Clear output
 function clearOutput() {
-    processedResult = { main: '', translation: '', log: '' };
+    processedResult = { main: '' };
     elements.outputContent.innerHTML = '<p class="placeholder">处理结果将显示在这里</p>';
-    elements.outputTabs.forEach(t => t.classList.remove('active'));
-    elements.outputTabs[0].classList.add('active');
+
+    // Reset tabs to default state (main, translation, log)
+    const tabsContainer = document.querySelector('.output-tabs');
+    if (tabsContainer) {
+        tabsContainer.innerHTML = `
+            <button class="output-tab active" data-part="part1">主要结果</button>
+            <button class="output-tab" data-part="part2">中文翻译</button>
+            <button class="output-tab" data-part="part3">修改说明</button>
+        `;
+        // Re-attach event listeners
+        tabsContainer.querySelectorAll('.output-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabsContainer.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                showOutputPart(tab.dataset.part);
+            });
+        });
+        elements.outputTabs = tabsContainer.querySelectorAll('.output-tab');
+    }
+
     elements.copyBtn.disabled = true;
 }
 
 // Set loading state
 function setLoading(loading) {
+    // Update input panel processing state
+    if (inputPanel) {
+        inputPanel.setProcessing(loading);
+    }
+
     const processBtn = inputPanel?.getProcessButton();
     if (processBtn) {
         if (loading) {
