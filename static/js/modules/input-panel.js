@@ -57,18 +57,66 @@ export class InputPanel {
         const contentArea = document.createElement('div');
         contentArea.className = 'input-content';
 
-        if (type === 'text' || type === 'mixed') {
-            const textarea = document.createElement('textarea');
-            textarea.id = 'input-text';
-            textarea.placeholder = this.state.placeholder;
-            textarea.value = this.state.text;
-            contentArea.appendChild(textarea);
-            this.elements.textarea = textarea;
-        }
-
-        if (type === 'file' || type === 'mixed') {
+        if (type === 'mixed') {
+            // Mixed mode: side-by-side layout with radio selection
+            contentArea.classList.add('mixed-input');
+            contentArea.innerHTML = `
+                <div class="input-column" id="text-column">
+                    <div class="column-header">
+                        <label class="radio-label">
+                            <input type="radio" name="input-mode" value="text" checked>
+                            <span>文本输入</span>
+                        </label>
+                    </div>
+                    <div class="column-content">
+                        <textarea id="input-text" placeholder="${this.state.placeholder}"></textarea>
+                    </div>
+                </div>
+                <div class="input-column" id="file-column">
+                    <div class="column-header">
+                        <label class="radio-label">
+                            <input type="radio" name="input-mode" value="file">
+                            <span>文件上传</span>
+                        </label>
+                    </div>
+                    <div class="column-content">
+                    </div>
+                </div>
+            `;
+            // Create file upload area and append to file column
+            const fileColumnContent = contentArea.querySelector('#file-column .column-content');
             const fileArea = this.createFileUploadArea();
-            contentArea.appendChild(fileArea);
+            fileColumnContent.appendChild(fileArea);
+
+            // Store references
+            this.elements.textarea = contentArea.querySelector('#input-text');
+            this.elements.textColumn = contentArea.querySelector('#text-column');
+            this.elements.fileColumn = contentArea.querySelector('#file-column');
+
+            // Bind radio button change
+            const radioButtons = contentArea.querySelectorAll('input[name="input-mode"]');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', () => this.handleInputModeChange());
+            });
+
+            // Initialize: disable file column by default
+            this.elements.fileColumn.classList.add('disabled');
+        } else {
+            // Single mode: text only
+            if (type === 'text') {
+                const textarea = document.createElement('textarea');
+                textarea.id = 'input-text';
+                textarea.placeholder = this.state.placeholder;
+                textarea.value = this.state.text;
+                contentArea.appendChild(textarea);
+                this.elements.textarea = textarea;
+            }
+
+            // Single mode: file only
+            if (type === 'file') {
+                const fileArea = this.createFileUploadArea();
+                contentArea.appendChild(fileArea);
+            }
         }
 
         this.container.appendChild(contentArea);
@@ -89,6 +137,32 @@ export class InputPanel {
 
         // Bind events
         this.bindEvents();
+    }
+
+    /**
+     * Handle input mode change (text vs file)
+     */
+    handleInputModeChange() {
+        const textRadio = this.container.querySelector('input[name="input-mode"][value="text"]');
+        const fileRadio = this.container.querySelector('input[name="input-mode"][value="file"]');
+
+        if (textRadio && fileRadio && this.elements.textColumn && this.elements.fileColumn) {
+            if (textRadio.checked) {
+                // Text mode enabled, disable file column
+                this.elements.textColumn.classList.remove('disabled');
+                this.elements.fileColumn.classList.add('disabled');
+                this.state.files = [];
+                this.updateFileList();
+            } else {
+                // File mode enabled, disable text column
+                this.elements.textColumn.classList.add('disabled');
+                this.elements.fileColumn.classList.remove('disabled');
+                if (this.elements.textarea) {
+                    this.elements.textarea.value = '';
+                }
+            }
+            this.options.onChange(this.getContent());
+        }
     }
 
     /**
@@ -262,6 +336,26 @@ export class InputPanel {
      * @returns {object} - { text, files, type }
      */
     getContent() {
+        // In mixed mode, only return content from the active column
+        if (this.state.inputType === 'mixed') {
+            const textRadio = this.container.querySelector('input[name="input-mode"][value="text"]');
+            const isTextMode = textRadio && textRadio.checked;
+
+            if (isTextMode) {
+                return {
+                    text: this.elements.textarea ? this.elements.textarea.value : '',
+                    files: [],
+                    type: 'text'
+                };
+            } else {
+                return {
+                    text: '',
+                    files: [...this.state.files],
+                    type: 'file'
+                };
+            }
+        }
+
         return {
             text: this.elements.textarea ? this.elements.textarea.value : '',
             files: [...this.state.files],
@@ -298,6 +392,16 @@ export class InputPanel {
         this.updateFileList();
 
         this.options.onChange(this.getContent());
+    }
+
+    /**
+     * Update char count display
+     */
+    updateCharCount() {
+        const countEl = this.container.querySelector('#char-count');
+        if (countEl && this.elements.textarea) {
+            countEl.textContent = this.elements.textarea.value.length;
+        }
     }
 
     /**
