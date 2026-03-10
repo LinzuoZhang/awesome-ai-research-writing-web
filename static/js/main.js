@@ -275,7 +275,7 @@ function parseAndDisplayResult(result) {
 
     if (outputTags.length === 0) {
         // No output tags - show entire result as main content
-        processedResult.main = result;
+        processedResult['main'] = result;
     } else {
         // Parse result based on output_tags
         outputTags.forEach((tag, index) => {
